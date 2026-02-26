@@ -1,0 +1,68 @@
+:root {
+    --bg-color: #f0f4f0;
+    --primary-green: #4CAF50;
+    --death-red: #e74c3c;
+    --wood-brown: #795548;
+}
+
+body {
+    background-color: var(--bg-color);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    color: var(--wood-brown);
+}
+
+.container {
+    text-align: center;
+    background: white;
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    width: 350px;
+}
+
+.tree-stage {
+    font-size: 80px;
+    margin: 20px 0;
+    transition: transform 0.3s ease;
+}
+
+.timer-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+#time-left {
+    position: absolute;
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.progress-ring__circle {
+    transition: stroke-dashoffset 0.35s;
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
+}
+
+button {
+    background-color: var(--primary-green);
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 25px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+button:hover { background-color: #45a049; }
+
+.stats { margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; }
+#forest-display { font-size: 1.5rem; letter-spacing: 5px; }

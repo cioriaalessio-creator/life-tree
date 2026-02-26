@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Albero della Vita | Focus</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Albero della Vita</h1>
+        
+        <div class="tree-stage" id="tree-display">🌱</div>
+        
+        <div class="timer-container">
+            <svg class="progress-ring" width="200" height="200">
+                <circle class="progress-ring__circle" stroke="white" stroke-width="8" fill="transparent" r="90" cx="100" cy="100"/>
+                <circle id="progress-bar" class="progress-ring__circle" stroke="#4CAF50" stroke-width="8" fill="transparent" r="90" cx="100" cy="100"/>
+            </svg>
+            <div id="time-left">10:00</div>
+        </div>
+
+        <button id="start-btn">Inizia Sessione</button>
+
+        <div class="stats">
+            <h3>La Tua Foresta (Oggi)</h3>
+            <div id="forest-display"></div>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>S
