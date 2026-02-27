@@ -3,30 +3,199 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Albero della Vita | Focus</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Albero della Vita | Foresta Leggendaria</title>
+    <style>
+        :root {
+            --bg: #f4f7f4;
+            --text: #2f4f2f;
+            --accent: #4CAF50;
+        }
+
+        body {
+            background-color: var(--bg);
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            color: var(--text);
+        }
+
+        .app-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 25px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.05);
+            text-align: center;
+            width: 90%;
+            max-width: 500px;
+            margin: 20px;
+        }
+
+        #tree-display {
+            font-size: 100px;
+            margin: 20px 0;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: block;
+        }
+
+        .timer-display {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin: 10px 0;
+            font-variant-numeric: tabular-nums;
+        }
+
+        button {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            font-weight: bold;
+        }
+
+        button:hover { background-color: #439a46; transform: scale(1.05); }
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
+
+        .forest-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #f0f0f0;
+        }
+
+        #forest-list {
+            font-size: 1.8rem;
+            margin-top: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 5px;
+            max-height: 250px;
+            overflow-y: auto;
+            padding: 10px;
+            background: #fafafa;
+            border-radius: 15px;
+        }
+
+        .status-msg { font-size: 0.9rem; color: #666; margin-bottom: 10px; }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Albero della Vita</h1>
-        
-        <div class="tree-stage" id="tree-display">🌱</div>
-        
-        <div class="timer-container">
-            <svg class="progress-ring" width="200" height="200">
-                <circle class="progress-ring__circle" stroke="white" stroke-width="8" fill="transparent" r="90" cx="100" cy="100"/>
-                <circle id="progress-bar" class="progress-ring__circle" stroke="#4CAF50" stroke-width="8" fill="transparent" r="90" cx="100" cy="100"/>
-            </svg>
-            <div id="time-left">10:00</div>
-        </div>
 
+    <div class="app-container">
+        <h1>Albero della Vita</h1>
+        <p class="status-msg">Resta focalizzato: se cambi scheda, l'albero morirà.</p>
+        
+        <div id="tree-display">🌱</div>
+        
+        <div class="timer-display" id="timer">10:00</div>
+        
         <button id="start-btn">Inizia Sessione</button>
 
-        <div class="stats">
-            <h3>La Tua Foresta (Oggi)</h3>
-            <div id="forest-display"></div>
+        <div class="forest-section">
+            <strong>La tua Foresta Leggendaria</strong>
+            <div id="forest-list">Caricamento...</div>
         </div>
     </div>
-    <script src="app.js"></script>
+
+    <script>
+        const DURATION = 10 * 60; 
+        let timeLeft = DURATION;
+        let timer = null;
+        let isActive = false;
+
+        const treeStages = ["🌱", "🌿", "🎋", "🌳", "🌲"];
+        const treeDisplay = document.getElementById('tree-display');
+        const timerDisplay = document.getElementById('timer');
+        const startBtn = document.getElementById('start-btn');
+        const forestList = document.getElementById('forest-list');
+
+        function killTree(reason) {
+            if (!isActive) return;
+            isActive = false;
+            clearInterval(timer);
+            treeDisplay.innerText = "🍂";
+            treeDisplay.style.transform = "rotate(90deg) translateY(20px)";
+            alert(`L'albero è morto! 💀\nCausa: ${reason}`);
+            location.reload();
+        }
+
+        window.addEventListener('blur', () => killTree("Hai perso il focus"));
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) killTree("Hai cambiato scheda");
+        });
+
+        async function getForest() {
+            try {
+                const res = await fetch('api.php?action=get');
+                const data = await res.json();
+                
+                if (data.count > 0) {
+                    const tipiAlberi = ["🌳", "🌲", "🌴", "🎋", "🌵"];
+                    let forestaVisiva = "";
+                    for (let i = 0; i < data.count; i++) {
+                        const casuale = tipiAlberi[Math.floor(Math.random() * tipiAlberi.length)];
+                        forestaVisiva += `<span>${casuale}</span>`;
+                    }
+                    forestList.innerHTML = forestaVisiva;
+                } else {
+                    // MESSAGGIO AGGIORNATO
+                    forestList.innerText = "non ci sono stati alberi al momento";
+                }
+            } catch (e) {
+                // MESSAGGIO AGGIORNATO ANCHE IN CASO DI ERRORE TECNICO
+                forestList.innerText = "non ci sono stati alberi al momento";
+            }
+        }
+
+        async function saveTreeToDB() {
+            try {
+                await fetch('api.php?action=save');
+                getForest();
+            } catch (e) { console.error("Errore salvataggio"); }
+        }
+
+        function updateUI() {
+            const min = Math.floor(timeLeft / 60);
+            const sec = timeLeft % 60;
+            timerDisplay.innerText = `${min}:${sec < 10 ? '0' : ''}${sec}`;
+            const stage = Math.floor((DURATION - timeLeft) / (DURATION / treeStages.length));
+            if (treeStages[stage]) treeDisplay.innerText = treeStages[stage];
+        }
+
+        startBtn.addEventListener('click', () => {
+            if (isActive) return;
+            isActive = true;
+            startBtn.disabled = true;
+            startBtn.innerText = "Focus...";
+
+            timer = setInterval(() => {
+                timeLeft--;
+                updateUI();
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    isActive = false;
+                    treeDisplay.innerText = "✨🌳✨";
+                    saveTreeToDB();
+                    alert("Ottimo lavoro!");
+                    resetSession();
+                }
+            }, 1000);
+        });
+
+        function resetSession() {
+            timeLeft = DURATION;
+            startBtn.disabled = false;
+            startBtn.innerText = "Inizia Sessione";
+            updateUI();
+        }
+
+        getForest();
+    </script>
 </body>
-</html>S
+</html>
