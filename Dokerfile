@@ -1,0 +1,11 @@
+# Usa l'immagine ufficiale di PHP con Apache
+FROM php:8.2-apache
+
+# Installa l'estensione mysqli necessaria per il tuo script db_config.php
+RUN docker-php-ext-install mysqli && docker-php-ext-enable mysqli
+
+# Copia i file del tuo progetto dentro la cartella del server web
+COPY . /var/www/html/
+
+# Permessi corretti per Apache
+RUN chown -R www-data:www-data /var/www/html
