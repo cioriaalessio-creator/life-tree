@@ -1,0 +1,39 @@
+services:
+  # Servizio per il Database
+  db:
+    image: mysql:8.0
+    container_name: albero_db_container
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: albero_db
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./albero_db.sql:/docker-entrypoint-initdb.d/albero_db.sql
+
+  # Servizio per il Sito Web (PHP + Apache)
+  web:
+    image: php:8.2-apache
+    container_name: albero_web_container
+    restart: always
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - db
+    # Installa l'estensione per far parlare PHP con MySQL
+    command: >
+      sh -c "docker-php-ext-install mysqli && apache2-foreground"
+
+  # Servizio per vedere il Database graficamente
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: albero_pma_container
+    restart: always
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: root_password
