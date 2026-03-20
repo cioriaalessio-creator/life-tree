@@ -93,7 +93,7 @@
         
         <div id="tree-display">🌱</div>
         
-        <div class="timer-display" id="timer">00:00</div>
+        <div class="timer-display" id="timer">0:00</div>
         
         <button id="start-btn">Inizia Sessione</button>
 
@@ -104,8 +104,8 @@
     </div>
 
     <script>
-        const DURATION = 10 * 60; 
-        let timeLeft = DURATION;
+        const DURATION = 10 * 60; // 10 minuti in secondi
+        let currentTime = 0; // Parte da 0 per il timer crescente
         let timer = null;
         let isActive = false;
 
@@ -144,11 +144,9 @@
                     }
                     forestList.innerHTML = forestaVisiva;
                 } else {
-                    // MESSAGGIO AGGIORNATO
                     forestList.innerText = "non ci sono stati alberi al momento";
                 }
             } catch (e) {
-                // MESSAGGIO AGGIORNATO ANCHE IN CASO DI ERRORE TECNICO
                 forestList.innerText = "non ci sono stati alberi al momento";
             }
         }
@@ -161,10 +159,12 @@
         }
 
         function updateUI() {
-            const min = Math.floor(timeLeft / 60);
-            const sec = timeLeft % 60;
+            const min = Math.floor(currentTime / 60);
+            const sec = currentTime % 60;
             timerDisplay.innerText = `${min}:${sec < 10 ? '0' : ''}${sec}`;
-            const stage = Math.floor((DURATION - timeLeft) / (DURATION / treeStages.length));
+            
+            // Calcolo dello stadio dell'albero basato sul tempo trascorso (crescente)
+            const stage = Math.floor(currentTime / (DURATION / treeStages.length));
             if (treeStages[stage]) treeDisplay.innerText = treeStages[stage];
         }
 
@@ -175,9 +175,10 @@
             startBtn.innerText = "Focus...";
 
             timer = setInterval(() => {
-                timeLeft--;
+                currentTime++; // Incrementa il tempo invece di diminuirlo
                 updateUI();
-                if (timeLeft <= 0) {
+                
+                if (currentTime >= DURATION) { // Controlla se il tempo massimo è raggiunto
                     clearInterval(timer);
                     isActive = false;
                     treeDisplay.innerText = "✨🌳✨";
@@ -189,7 +190,7 @@
         });
 
         function resetSession() {
-            timeLeft = DURATION;
+            currentTime = 0; // Resetta a zero per la nuova sessione
             startBtn.disabled = false;
             startBtn.innerText = "Inizia Sessione";
             updateUI();
