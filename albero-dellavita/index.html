@@ -1,202 +1,1038 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Albero della Vita | Foresta Leggendaria</title>
-    <style>
-        :root {
-            --bg: #f4f7f4;
-            --text: #2f4f2f;
-            --accent: #4CAF50;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌳 Albero della Vita</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --soil: #1a0f00;
+    --bark: #3d2007;
+    --moss: #2d4a1e;
+    --leaf: #4a7c3f;
+    --spring: #7ab648;
+    --gold: #c8a96e;
+    --cream: #f5ede0;
+    --ash: #8a7a6a;
+    --dead: #4a3728;
+    --glow: rgba(122,182,72,0.15);
+  }
 
-        body {
-            background-color: var(--bg);
-            font-family: 'Segoe UI', Roboto, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            color: var(--text);
-        }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        .app-container {
-            background: white;
-            padding: 2rem;
-            border-radius: 25px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.05);
-            text-align: center;
-            width: 90%;
-            max-width: 500px;
-            margin: 20px;
-        }
+  body {
+    background: var(--soil);
+    color: var(--cream);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+    background-image:
+      radial-gradient(ellipse at 20% 80%, rgba(61,32,7,0.8) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 20%, rgba(45,74,30,0.3) 0%, transparent 50%);
+  }
 
-        #tree-display {
-            font-size: 100px;
-            margin: 20px 0;
-            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            display: block;
-        }
+  /* Grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
 
-        .timer-display {
-            font-size: 3.5rem;
-            font-weight: 800;
-            margin: 10px 0;
-            font-variant-numeric: tabular-nums;
-        }
+  .app {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+    position: relative;
+  }
 
-        button {
-            background-color: var(--accent);
-            color: white;
-            border: none;
-            padding: 15px 40px;
-            font-size: 1.1rem;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: transform 0.2s, background 0.2s;
-            font-weight: bold;
-        }
+  /* Header */
+  header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+  }
 
-        button:hover { background-color: #439a46; transform: scale(1.05); }
-        button:disabled { background-color: #ccc; cursor: not-allowed; }
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 700;
+    color: var(--cream);
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
 
-        .forest-section {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 2px solid #f0f0f0;
-        }
+  header h1 span { color: var(--spring); }
 
-        #forest-list {
-            font-size: 1.8rem;
-            margin-top: 15px;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 5px;
-            max-height: 250px;
-            overflow-y: auto;
-            padding: 10px;
-            background: #fafafa;
-            border-radius: 15px;
-        }
+  header p {
+    color: var(--ash);
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-top: 0.5rem;
+  }
 
-        .status-msg { font-size: 0.9rem; color: #666; margin-bottom: 10px; }
-    </style>
+  /* Streak */
+  .streak-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    font-size: 0.75rem;
+    color: var(--ash);
+    letter-spacing: 0.1em;
+  }
+
+  .streak-count {
+    color: var(--gold);
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+
+  /* Main arena */
+  .arena {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  @media (max-width: 680px) {
+    .arena { grid-template-columns: 1fr; }
+  }
+
+  /* Tree stage */
+  .tree-stage {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 16px;
+    padding: 2rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .tree-stage::before {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 80%; height: 3px;
+    background: linear-gradient(90deg, transparent, var(--moss), transparent);
+    border-radius: 100%;
+  }
+
+  /* SVG Tree */
+  .tree-svg-wrap {
+    position: relative;
+    width: 200px;
+    height: 220px;
+  }
+
+  #tree-svg {
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 0 20px var(--glow));
+    transition: filter 0.5s;
+  }
+
+  #tree-svg.dead {
+    filter: drop-shadow(0 0 10px rgba(74,55,40,0.5)) saturate(0);
+  }
+
+  /* Ring progress */
+  .ring-wrap {
+    position: absolute;
+    inset: -18px;
+    pointer-events: none;
+  }
+
+  #progress-ring {
+    transform: rotate(-90deg);
+    width: 100%;
+    height: 100%;
+  }
+
+  #progress-track {
+    fill: none;
+    stroke: rgba(255,255,255,0.04);
+    stroke-width: 4;
+  }
+
+  #progress-fill {
+    fill: none;
+    stroke: var(--spring);
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-dasharray: 720;
+    stroke-dashoffset: 720;
+    transition: stroke-dashoffset 1s linear, stroke 0.5s;
+  }
+
+  #progress-fill.dead { stroke: var(--dead); }
+
+  /* Status message */
+  .status-msg {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 1rem;
+    color: var(--ash);
+    text-align: center;
+    min-height: 1.4em;
+    transition: color 0.5s;
+  }
+
+  .status-msg.alive { color: var(--spring); }
+  .status-msg.dead  { color: #8b5e52; }
+  .status-msg.done  { color: var(--gold); }
+
+  /* Timer display */
+  .timer-display {
+    font-size: 3.5rem;
+    font-weight: 300;
+    letter-spacing: -0.04em;
+    color: var(--cream);
+    line-height: 1;
+  }
+
+  .timer-display small {
+    font-size: 1rem;
+    color: var(--ash);
+    letter-spacing: 0.1em;
+  }
+
+  /* Phase indicator */
+  .phase-dots {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .phase-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    transition: background 0.4s, transform 0.3s;
+  }
+
+  .phase-dot.active {
+    background: var(--spring);
+    transform: scale(1.3);
+    box-shadow: 0 0 6px var(--spring);
+  }
+
+  .phase-dot.done { background: var(--gold); }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  .btn {
+    padding: 0.7rem 1.6rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+
+  .btn-primary {
+    background: var(--spring);
+    color: var(--soil);
+    font-weight: 600;
+  }
+
+  .btn-primary:hover { background: #8fcf55; transform: translateY(-1px); }
+  .btn-primary:disabled { background: var(--ash); cursor: not-allowed; transform: none; }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--ash);
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .btn-ghost:hover { color: var(--cream); border-color: rgba(255,255,255,0.2); }
+
+  /* Sidebar */
+  .sidebar { display: flex; flex-direction: column; gap: 1rem; }
+
+  .card {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    padding: 1.2rem;
+  }
+
+  .card-title {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ash);
+    margin-bottom: 1rem;
+  }
+
+  /* Stats */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+
+  .stat-item { text-align: center; }
+
+  .stat-val {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    color: var(--cream);
+    line-height: 1;
+  }
+
+  .stat-val.gold { color: var(--gold); }
+
+  .stat-label {
+    font-size: 0.6rem;
+    color: var(--ash);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top: 0.2rem;
+  }
+
+  /* Today's forest preview */
+  .mini-forest {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .mini-tree {
+    font-size: 1.3rem;
+    animation: sway 3s ease-in-out infinite;
+    animation-delay: calc(var(--i) * 0.3s);
+  }
+
+  @keyframes sway {
+    0%, 100% { transform: rotate(-2deg); }
+    50% { transform: rotate(2deg); }
+  }
+
+  .no-trees { color: var(--ash); font-size: 0.75rem; font-style: italic; }
+
+  /* Weekly chart */
+  .week-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    height: 60px;
+  }
+
+  .week-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+
+  .week-bar {
+    width: 100%;
+    background: rgba(255,255,255,0.06);
+    border-radius: 3px 3px 0 0;
+    min-height: 3px;
+    transition: height 0.5s ease;
+    position: relative;
+  }
+
+  .week-bar.has-data { background: var(--moss); }
+  .week-bar.today { background: var(--spring); box-shadow: 0 0 8px var(--glow); }
+
+  .week-day {
+    font-size: 0.55rem;
+    color: var(--ash);
+    letter-spacing: 0.05em;
+  }
+
+  /* Focus warning */
+  .focus-alert {
+    position: fixed;
+    inset: 0;
+    background: rgba(10,4,0,0.95);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 500;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+
+  .focus-alert.show {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .alert-icon { font-size: 4rem; margin-bottom: 1rem; }
+
+  .alert-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    color: #c0392b;
+    margin-bottom: 0.5rem;
+  }
+
+  .alert-msg {
+    color: var(--ash);
+    font-size: 0.85rem;
+    text-align: center;
+    max-width: 320px;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+  }
+
+  /* Tree animations */
+  @keyframes growIn {
+    from { transform: scaleY(0); transform-origin: bottom; opacity: 0; }
+    to   { transform: scaleY(1); transform-origin: bottom; opacity: 1; }
+  }
+
+  @keyframes leafFloat {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    33%  { transform: translateY(-4px) rotate(2deg); }
+    66%  { transform: translateY(2px) rotate(-1deg); }
+  }
+
+  .leaf-anim { animation: leafFloat 4s ease-in-out infinite; }
+
+  /* Completed modal */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(10,4,0,0.92);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 600;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.4s;
+  }
+
+  .modal-overlay.show { opacity: 1; pointer-events: all; }
+
+  .modal {
+    background: var(--bark);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px;
+    padding: 2.5rem;
+    max-width: 380px;
+    width: 90%;
+    text-align: center;
+    transform: scale(0.9);
+    transition: transform 0.4s;
+  }
+
+  .modal-overlay.show .modal { transform: scale(1); }
+
+  .modal-icon { font-size: 3.5rem; margin-bottom: 1rem; }
+
+  .modal-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    color: var(--gold);
+    margin-bottom: 0.5rem;
+  }
+
+  .modal-sub { color: var(--ash); font-size: 0.8rem; line-height: 1.6; margin-bottom: 1.5rem; }
+
+  /* Forest section */
+  .forest-section { margin-top: 0.5rem; }
+
+  .forest-section h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem;
+    color: var(--cream);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .forest-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.5rem;
+  }
+
+  .forest-day {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 8px;
+    padding: 0.5rem 0.3rem;
+    text-align: center;
+    min-height: 70px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .forest-day.today-col {
+    border-color: rgba(122,182,72,0.3);
+    background: rgba(122,182,72,0.04);
+  }
+
+  .forest-day-label {
+    font-size: 0.55rem;
+    color: var(--ash);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+
+  .forest-tree { font-size: 1.1rem; line-height: 1.2; }
+</style>
 </head>
 <body>
 
-    <div class="app-container">
-        <h1>Albero della Vita</h1>
-        <p class="status-msg">Resta focalizzato: se cambi scheda, l'albero morirà.</p>
-        
-        <div id="tree-display">🌱</div>
-        
-        <div class="timer-display" id="timer">0:00</div>
-        
-        <button id="start-btn">Inizia Sessione</button>
+<div class="app">
+  <header>
+    <h1>Albero della <span>Vita</span></h1>
+    <p>Deep Work Tracker — Ogni sessione conta</p>
+  </header>
 
-        <div class="forest-section">
-            <strong>La tua Foresta Leggendaria</strong>
-            <div id="forest-list">Caricamento...</div>
+  <div class="streak-bar">
+    <span>🔥 Streak:</span>
+    <span class="streak-count" id="streak-display">0</span>
+    <span>giorni consecutivi</span>
+  </div>
+
+  <div class="arena">
+    <!-- Tree Stage -->
+    <div class="tree-stage">
+      <p class="status-msg" id="status-msg">Pronto a piantare un nuovo albero?</p>
+
+      <div class="tree-svg-wrap">
+        <div class="ring-wrap">
+          <svg id="progress-ring" viewBox="0 0 236 236">
+            <circle id="progress-track" cx="118" cy="118" r="114"/>
+            <circle id="progress-fill" cx="118" cy="118" r="114"/>
+          </svg>
         </div>
+        <svg id="tree-svg" viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg">
+          <!-- Ground -->
+          <ellipse cx="100" cy="210" rx="60" ry="8" fill="#2d1a05" opacity="0.5"/>
+          <!-- Trunk -->
+          <rect id="trunk" x="88" y="140" width="24" height="70" rx="6" fill="#5c3317" opacity="0"/>
+          <!-- Layers of leaves -->
+          <g id="leaves-bottom" opacity="0">
+            <ellipse cx="100" cy="150" rx="55" ry="30" fill="#2d4a1e"/>
+          </g>
+          <g id="leaves-mid" opacity="0" class="leaf-anim">
+            <ellipse cx="100" cy="120" rx="45" ry="28" fill="#3d6b2a"/>
+          </g>
+          <g id="leaves-top" opacity="0" class="leaf-anim">
+            <ellipse cx="100" cy="94" rx="35" ry="24" fill="#4a7c3f"/>
+          </g>
+          <g id="leaves-tip" opacity="0" class="leaf-anim">
+            <ellipse cx="100" cy="72" rx="24" ry="18" fill="#5a9050"/>
+          </g>
+          <!-- Fruits/flowers -->
+          <g id="fruits" opacity="0">
+            <circle cx="72" cy="108" r="5" fill="#c8a96e"/>
+            <circle cx="128" cy="112" r="5" fill="#c8a96e"/>
+            <circle cx="100" cy="86" r="4" fill="#e8c97e"/>
+            <circle cx="85" cy="78" r="3" fill="#c8a96e"/>
+            <circle cx="115" cy="80" r="3" fill="#e8c97e"/>
+          </g>
+          <!-- Seed state -->
+          <g id="seed">
+            <ellipse cx="100" cy="200" rx="10" ry="7" fill="#8b6914"/>
+            <line x1="100" y1="193" x2="100" y2="182" stroke="#7ab648" stroke-width="2" stroke-linecap="round"/>
+            <line x1="100" y1="185" x2="93" y2="178" stroke="#7ab648" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="100" y1="185" x2="107" y2="178" stroke="#7ab648" stroke-width="1.5" stroke-linecap="round"/>
+          </g>
+          <!-- Dead state overlay -->
+          <g id="dead-overlay" opacity="0">
+            <line x1="88" y1="140" x2="75" y2="100" stroke="#4a3728" stroke-width="3" stroke-linecap="round"/>
+            <line x1="112" y1="130" x2="130" y2="95" stroke="#4a3728" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="100" y1="120" x2="100" y2="80" stroke="#4a3728" stroke-width="2" stroke-linecap="round"/>
+          </g>
+        </svg>
+      </div>
+
+      <div class="timer-display" id="timer-display">
+        10<small>:00</small>
+      </div>
+
+      <div class="phase-dots">
+        <div class="phase-dot" id="dot-0"></div>
+        <div class="phase-dot" id="dot-1"></div>
+        <div class="phase-dot" id="dot-2"></div>
+        <div class="phase-dot" id="dot-3"></div>
+        <span style="color:var(--ash);font-size:0.65rem;margin-left:4px">fasi</span>
+      </div>
+
+      <div class="controls">
+        <button class="btn btn-primary" id="btn-start">▶ Inizia</button>
+        <button class="btn btn-ghost" id="btn-reset">↺ Reset</button>
+      </div>
     </div>
 
-    <script>
-        const DURATION = 10 * 60; // 10 minuti in secondi
-        let currentTime = 0; // Parte da 0 per il timer crescente
-        let timer = null;
-        let isActive = false;
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="card">
+        <p class="card-title">📊 Statistiche</p>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-val gold" id="stat-today">0</div>
+            <div class="stat-label">Oggi</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-val" id="stat-total">0</div>
+            <div class="stat-label">Totale</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-val" id="stat-minutes">0</div>
+            <div class="stat-label">Min oggi</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-val" id="stat-streak">0</div>
+            <div class="stat-label">Streak 🔥</div>
+          </div>
+        </div>
+      </div>
 
-        const treeStages = ["🌱", "🌿", "🎋", "🌳", "🌲"];
-        const treeDisplay = document.getElementById('tree-display');
-        const timerDisplay = document.getElementById('timer');
-        const startBtn = document.getElementById('start-btn');
-        const forestList = document.getElementById('forest-list');
+      <div class="card">
+        <p class="card-title">🌿 La tua foresta oggi</p>
+        <div class="mini-forest" id="mini-forest">
+          <span class="no-trees">Nessun albero ancora oggi...</span>
+        </div>
+      </div>
 
-        function killTree(reason) {
-            if (!isActive) return;
-            isActive = false;
-            clearInterval(timer);
-            treeDisplay.innerText = "🍂";
-            treeDisplay.style.transform = "rotate(90deg) translateY(20px)";
-            alert(`L'albero è morto! 💀\nCausa: ${reason}`);
-            location.reload();
-        }
+      <div class="card">
+        <p class="card-title">📅 Questa settimana</p>
+        <div class="week-chart" id="week-chart"></div>
+      </div>
+    </div>
+  </div>
 
-        window.addEventListener('blur', () => killTree("Hai perso il focus"));
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) killTree("Hai cambiato scheda");
-        });
+  <!-- Forest grid -->
+  <div class="forest-section">
+    <h2>🌳 La tua Foresta — Ultimi 7 giorni</h2>
+    <div class="forest-grid" id="forest-grid"></div>
+  </div>
+</div>
 
-        async function getForest() {
-            try {
-                const res = await fetch('api.php?action=get');
-                const data = await res.json();
-                
-                if (data.count > 0) {
-                    const tipiAlberi = ["🌳", "🌲", "🌴", "🎋", "🌵"];
-                    let forestaVisiva = "";
-                    for (let i = 0; i < data.count; i++) {
-                        const casuale = tipiAlberi[Math.floor(Math.random() * tipiAlberi.length)];
-                        forestaVisiva += `<span>${casuale}</span>`;
-                    }
-                    forestList.innerHTML = forestaVisiva;
-                } else {
-                    forestList.innerText = "non ci sono stati alberi al momento";
-                }
-            } catch (e) {
-                forestList.innerText = "non ci sono stati alberi al momento";
-            }
-        }
+<!-- Focus lost alert -->
+<div class="focus-alert" id="focus-alert">
+  <div class="alert-icon">💀</div>
+  <div class="alert-title">L'albero è morto.</div>
+  <div class="alert-msg">Hai abbandonato il focus. Ogni distrazione ha un costo. Ritorna e ricomincia da capo.</div>
+  <button class="btn btn-primary" onclick="dismissAlert()">Ricominciare</button>
+</div>
 
-        async function saveTreeToDB() {
-            try {
-                await fetch('api.php?action=save');
-                getForest();
-            } catch (e) { console.error("Errore salvataggio"); }
-        }
+<!-- Completion modal -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-icon">🌳</div>
+    <div class="modal-title">Albero Completato!</div>
+    <div class="modal-sub" id="modal-sub">Hai mantenuto il focus per 10 minuti interi. Il tuo albero è stato piantato nella foresta.</div>
+    <button class="btn btn-primary" onclick="closeModal()">Pianta un altro albero</button>
+  </div>
+</div>
 
-        function updateUI() {
-            const min = Math.floor(currentTime / 60);
-            const sec = currentTime % 60;
-            timerDisplay.innerText = `${min}:${sec < 10 ? '0' : ''}${sec}`;
-            
-            // Calcolo dello stadio dell'albero basato sul tempo trascorso (crescente)
-            const stage = Math.floor(currentTime / (DURATION / treeStages.length));
-            if (treeStages[stage]) treeDisplay.innerText = treeStages[stage];
-        }
+<script>
+// ─── State ───────────────────────────────────────────────────────────────────
+const PHASE_DURATION = 10 * 60; // 10 min in secondi
+const TREES = ['🌱','🌿','🌳','🌲','🎋','🎄'];
+const TREE_TYPES = { 0: '🌱', 1: '🌿', 2: '🌳', 3: '🌲', 4: '🎋', 5: '🎄' };
 
-        startBtn.addEventListener('click', () => {
-            if (isActive) return;
-            isActive = true;
-            startBtn.disabled = true;
-            startBtn.innerText = "Focus...";
+let state = {
+  running: false,
+  dead: false,
+  seconds: PHASE_DURATION,
+  interval: null,
+  focusLost: false,
+};
 
-            timer = setInterval(() => {
-                currentTime++; // Incrementa il tempo invece di diminuirlo
-                updateUI();
-                
-                if (currentTime >= DURATION) { // Controlla se il tempo massimo è raggiunto
-                    clearInterval(timer);
-                    isActive = false;
-                    treeDisplay.innerText = "✨🌳✨";
-                    saveTreeToDB();
-                    alert("Ottimo lavoro!");
-                    resetSession();
-                }
-            }, 1000);
-        });
+function todayKey() {
+  return new Date().toISOString().split('T')[0];
+}
 
-        function resetSession() {
-            currentTime = 0; // Resetta a zero per la nuova sessione
-            startBtn.disabled = false;
-            startBtn.innerText = "Inizia Sessione";
-            updateUI();
-        }
+function loadData() {
+  try {
+    return JSON.parse(localStorage.getItem('albero_data') || '{}');
+  } catch { return {}; }
+}
 
-        getForest();
-    </script>
+function saveData(data) {
+  localStorage.setItem('albero_data', JSON.stringify(data));
+}
+
+function getData() {
+  const d = loadData();
+  if (!d.days) d.days = {};
+  if (!d.total) d.total = 0;
+  if (!d.streak) d.streak = 0;
+  if (!d.lastDay) d.lastDay = null;
+  return d;
+}
+
+// ─── SVG Tree Rendering ──────────────────────────────────────────────────────
+function renderTree(phase, dead = false) {
+  const parts = {
+    seed: document.getElementById('seed'),
+    trunk: document.getElementById('trunk'),
+    leavesBottom: document.getElementById('leaves-bottom'),
+    leavesMid: document.getElementById('leaves-mid'),
+    leavesTop: document.getElementById('leaves-top'),
+    leavesTip: document.getElementById('leaves-tip'),
+    fruits: document.getElementById('fruits'),
+    deadOverlay: document.getElementById('dead-overlay'),
+  };
+
+  // Reset all
+  Object.values(parts).forEach(el => { if (el) el.setAttribute('opacity', '0'); });
+
+  const svg = document.getElementById('tree-svg');
+
+  if (dead) {
+    svg.classList.add('dead');
+    parts.trunk.setAttribute('opacity', '1');
+    parts.trunk.setAttribute('fill', '#3a2010');
+    parts.deadOverlay.setAttribute('opacity', '1');
+    return;
+  }
+
+  svg.classList.remove('dead');
+
+  if (phase === 0) {
+    parts.seed.setAttribute('opacity', '1');
+  } else if (phase === 1) {
+    parts.seed.setAttribute('opacity', '0');
+    parts.trunk.setAttribute('opacity', '1');
+    parts.trunk.setAttribute('fill', '#5c3317');
+    parts.leavesBottom.setAttribute('opacity', '0.6');
+  } else if (phase === 2) {
+    parts.trunk.setAttribute('opacity', '1');
+    parts.leavesBottom.setAttribute('opacity', '1');
+    parts.leavesMid.setAttribute('opacity', '1');
+  } else if (phase === 3) {
+    parts.trunk.setAttribute('opacity', '1');
+    parts.leavesBottom.setAttribute('opacity', '1');
+    parts.leavesMid.setAttribute('opacity', '1');
+    parts.leavesTop.setAttribute('opacity', '1');
+    parts.leavesTip.setAttribute('opacity', '0.7');
+    parts.fruits.setAttribute('opacity', '1');
+  }
+}
+
+// ─── Progress Ring ───────────────────────────────────────────────────────────
+function updateRing(secondsLeft) {
+  const fill = document.getElementById('progress-fill');
+  const total = PHASE_DURATION;
+  const progress = (total - secondsLeft) / total;
+  const circumference = 2 * Math.PI * 114;
+  fill.style.strokeDashoffset = circumference * (1 - progress);
+}
+
+// ─── Timer Display ───────────────────────────────────────────────────────────
+function formatTime(s) {
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return `${m}<small>:${String(sec).padStart(2,'0')}</small>`;
+}
+
+function updateTimerDisplay() {
+  document.getElementById('timer-display').innerHTML = formatTime(state.seconds);
+}
+
+// ─── Phase Dots ──────────────────────────────────────────────────────────────
+function getPhase(secondsLeft) {
+  const elapsed = PHASE_DURATION - secondsLeft;
+  if (elapsed < PHASE_DURATION * 0.25) return 0;
+  if (elapsed < PHASE_DURATION * 0.5)  return 1;
+  if (elapsed < PHASE_DURATION * 0.75) return 2;
+  return 3;
+}
+
+function updateDots(phase) {
+  for (let i = 0; i < 4; i++) {
+    const dot = document.getElementById(`dot-${i}`);
+    dot.classList.remove('active', 'done');
+    if (i < phase) dot.classList.add('done');
+    else if (i === phase) dot.classList.add('active');
+  }
+}
+
+// ─── Status Messages ─────────────────────────────────────────────────────────
+const ALIVE_MSGS = [
+  'Il focus è vita. Continua.',
+  'Ogni secondo conta.',
+  'L\'albero sta crescendo...',
+  'Non osare cambiare scheda.',
+  'La foresta ti aspetta.',
+];
+
+const PHASE_MSGS = [
+  '🌱 Seme piantato. Inizia il focus.',
+  '🌿 Germoglio. Stai crescendo.',
+  '🌳 Pianta. Quasi a metà.',
+  '🌲 Albero maturo. Resisti!',
+];
+
+function setStatus(text, cls = '') {
+  const el = document.getElementById('status-msg');
+  el.textContent = text;
+  el.className = 'status-msg ' + cls;
+}
+
+// ─── Start / Stop / Reset ────────────────────────────────────────────────────
+function startTimer() {
+  if (state.running || state.dead) return;
+  state.running = true;
+  state.focusLost = false;
+  document.getElementById('btn-start').disabled = true;
+  document.getElementById('progress-fill').classList.remove('dead');
+
+  const phase = getPhase(state.seconds);
+  renderTree(phase);
+  setStatus(PHASE_MSGS[phase], 'alive');
+
+  state.interval = setInterval(() => {
+    if (!state.running) return;
+    state.seconds--;
+    updateTimerDisplay();
+    updateRing(state.seconds);
+
+    const ph = getPhase(state.seconds);
+    renderTree(ph);
+    updateDots(ph);
+    setStatus(PHASE_MSGS[ph], 'alive');
+
+    if (state.seconds <= 0) {
+      completeSession();
+    }
+  }, 1000);
+}
+
+function killTree(reason) {
+  if (!state.running || state.dead) return;
+  state.dead = true;
+  state.running = false;
+  clearInterval(state.interval);
+
+  renderTree(0, true);
+  document.getElementById('progress-fill').classList.add('dead');
+  setStatus('L\'albero è morto. ' + reason, 'dead');
+  document.getElementById('btn-start').disabled = true;
+
+  setTimeout(() => {
+    document.getElementById('focus-alert').classList.add('show');
+  }, 600);
+}
+
+function dismissAlert() {
+  document.getElementById('focus-alert').classList.remove('show');
+  resetTimer();
+}
+
+function resetTimer() {
+  clearInterval(state.interval);
+  state.running = false;
+  state.dead = false;
+  state.seconds = PHASE_DURATION;
+  state.focusLost = false;
+
+  updateTimerDisplay();
+  updateRing(PHASE_DURATION);
+  renderTree(0);
+  updateDots(0);
+  document.getElementById('progress-fill').classList.remove('dead');
+  document.getElementById('btn-start').disabled = false;
+  document.getElementById('tree-svg').classList.remove('dead');
+  setStatus('Pronto a piantare un nuovo albero?', '');
+}
+
+function completeSession() {
+  clearInterval(state.interval);
+  state.running = false;
+  state.seconds = 0;
+  renderTree(3);
+  setStatus('Albero completato! 🌳', 'done');
+
+  // Save to storage
+  const data = getData();
+  const today = todayKey();
+  if (!data.days[today]) data.days[today] = { trees: 0, minutes: 0 };
+  data.days[today].trees++;
+  data.days[today].minutes += 10;
+  data.total++;
+
+  // Streak logic
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yKey = yesterday.toISOString().split('T')[0];
+  if (data.lastDay === yKey || data.lastDay === today) {
+    if (data.lastDay !== today) data.streak++;
+  } else {
+    data.streak = 1;
+  }
+  data.lastDay = today;
+  saveData(data);
+
+  // Show modal
+  const treeCount = data.days[today].trees;
+  document.getElementById('modal-sub').textContent =
+    `Hai mantenuto il focus per 10 minuti. Oggi hai piantato ${treeCount} ${treeCount === 1 ? 'albero' : 'alberi'}. Continua così!`;
+  document.getElementById('modal-overlay').classList.add('show');
+
+  refreshUI();
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('show');
+  resetTimer();
+}
+
+// ─── Focus Detection ─────────────────────────────────────────────────────────
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && state.running) {
+    killTree('Hai cambiato scheda.');
+  }
+});
+
+window.addEventListener('blur', () => {
+  if (state.running) {
+    killTree('Hai perso il focus.');
+  }
+});
+
+window.addEventListener('focus', () => {
+  // focus regained — tree already dead, no action needed
+});
+
+// ─── UI Refresh ──────────────────────────────────────────────────────────────
+function refreshUI() {
+  const data = getData();
+  const today = todayKey();
+  const todayData = data.days[today] || { trees: 0, minutes: 0 };
+
+  // Stats
+  document.getElementById('stat-today').textContent = todayData.trees;
+  document.getElementById('stat-total').textContent = data.total;
+  document.getElementById('stat-minutes').textContent = todayData.minutes;
+  document.getElementById('stat-streak').textContent = data.streak;
+  document.getElementById('streak-display').textContent = data.streak;
+
+  // Mini forest
+  const mf = document.getElementById('mini-forest');
+  if (todayData.trees === 0) {
+    mf.innerHTML = '<span class="no-trees">Nessun albero ancora oggi...</span>';
+  } else {
+    mf.innerHTML = '';
+    for (let i = 0; i < todayData.trees; i++) {
+      const span = document.createElement('span');
+      span.className = 'mini-tree';
+      span.style.setProperty('--i', i);
+      const typeIdx = Math.min(Math.floor(data.streak / 3), TREES.length - 1);
+      span.textContent = TREES[typeIdx];
+      mf.appendChild(span);
+    }
+  }
+
+  // Week chart
+  const chart = document.getElementById('week-chart');
+  chart.innerHTML = '';
+  const days = ['L','M','M','G','V','S','D'];
+  const maxTrees = 5;
+
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().split('T')[0];
+    const dayData = data.days[key] || { trees: 0 };
+    const isToday = key === today;
+    const heightPct = Math.min(dayData.trees / maxTrees, 1);
+    const heightPx = 4 + heightPct * 52;
+
+    const wrap = document.createElement('div');
+    wrap.className = 'week-bar-wrap';
+
+    const bar = document.createElement('div');
+    bar.className = 'week-bar' + (dayData.trees > 0 ? ' has-data' : '') + (isToday ? ' today' : '');
+    bar.style.height = heightPx + 'px';
+
+    const label = document.createElement('div');
+    label.className = 'week-day';
+    label.textContent = days[6 - i];
+
+    wrap.appendChild(bar);
+    wrap.appendChild(label);
+    chart.appendChild(wrap);
+  }
+
+  // Forest grid
+  const grid = document.getElementById('forest-grid');
+  grid.innerHTML = '';
+  const dayNames = ['LUN','MAR','MER','GIO','VEN','SAB','DOM'];
+
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().split('T')[0];
+    const dayData = data.days[key] || { trees: 0 };
+    const isToday = key === today;
+    const dow = (d.getDay() + 6) % 7;
+
+    const col = document.createElement('div');
+    col.className = 'forest-day' + (isToday ? ' today-col' : '');
+
+    const lbl = document.createElement('div');
+    lbl.className = 'forest-day-label';
+    lbl.textContent = dayNames[dow];
+    col.appendChild(lbl);
+
+    if (dayData.trees === 0) {
+      const empty = document.createElement('div');
+      empty.style.cssText = 'color:var(--ash);font-size:0.7rem;margin-top:4px';
+      empty.textContent = '—';
+      col.appendChild(empty);
+    } else {
+      const typeIdx = Math.min(Math.floor(data.streak / 3), TREES.length - 1);
+      for (let t = 0; t < Math.min(dayData.trees, 6); t++) {
+        const tree = document.createElement('div');
+        tree.className = 'forest-tree';
+        tree.textContent = TREES[typeIdx];
+        col.appendChild(tree);
+      }
+      if (dayData.trees > 6) {
+        const more = document.createElement('div');
+        more.style.cssText = 'color:var(--ash);font-size:0.6rem';
+        more.textContent = `+${dayData.trees - 6}`;
+        col.appendChild(more);
+      }
+    }
+
+    grid.appendChild(col);
+  }
+}
+
+// ─── Buttons ─────────────────────────────────────────────────────────────────
+document.getElementById('btn-start').addEventListener('click', startTimer);
+document.getElementById('btn-reset').addEventListener('click', () => {
+  if (state.running && !confirm('Sei sicuro? L\'albero andrà perso.')) return;
+  resetTimer();
+});
+
+// ─── Init ────────────────────────────────────────────────────────────────────
+renderTree(0);
+updateDots(0);
+updateRing(PHASE_DURATION);
+refreshUI();
+</script>
 </body>
 </html>
